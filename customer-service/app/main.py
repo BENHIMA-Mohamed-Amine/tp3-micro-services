@@ -1,3 +1,4 @@
+import uvicorn
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.database import create_db_and_tables
@@ -40,3 +41,6 @@ def health_check():
 def root():
     """Root endpoint"""
     return {"service": settings.service_name, "version": "1.0.0", "status": "running"}
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host="0.0.0.0", port=settings.service_port, reload=True)
