@@ -1,6 +1,5 @@
-
 services:
-  # PostgreSQL Database
+  # --- Infrastructure ---
   postgres:
     image: postgres:15-alpine
     container_name: postgres_db
@@ -21,14 +20,13 @@ services:
       timeout: 5s
       retries: 5
 
-  # Consul for Service Discovery
   consul:
-    image: hashicorp/consul:latest  # Changed from consul:latest
+    image: hashicorp/consul:latest
     container_name: consul
-    command: agent -server -ui -bootstrap-expect=1 -client=0.0.0.0
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
     ports:
-      - "8500:8500"  # HTTP API and UI
-      - "8600:8600/udp"  # DNS
+      - "8500:8500"
+      - "8600:8600/udp"
     volumes:
       - consul_data:/consul/data
     networks:
@@ -38,6 +36,63 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+  
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--configFile=/etc/traefik/traefik.yml"
+    ports:
+      - "80:80"      # API Gateway (The main entry point)
+      - "8080:8080"  # Dashboard
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+    networks:
+      - backend
+    depends_on:
+      consul:
+        condition: service_healthy
+
+  # --- Microservices ---
+  customer-service:
+    build: ./customer-service
+    container_name: customer-service
+    ports:
+      - "8081:8081"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/customer_db
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - SERVICE_NAME=customer-service
+      - SERVICE_PORT=8081
+      - SERVICE_HOST=customer-service # Important: Must match container_name for Consul checks
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    networks:
+      - backend
+
+  inventory-service:
+    build: ./inventory-service
+    container_name: inventory-service
+    ports:
+      - "8082:8082"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/inventory_db
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - SERVICE_NAME=inventory-service
+      - SERVICE_PORT=8082
+      - SERVICE_HOST=inventory-service # Important: Must match container_name for Consul checks
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    networks:
+      - backend
 
 volumes:
   postgres_data:

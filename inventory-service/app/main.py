@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Inventory Service", lifespan=lifespan)
-app.include_router(products.router)
+app.include_router(products.router, prefix="/api")
 
 @app.get("/")
 def root():

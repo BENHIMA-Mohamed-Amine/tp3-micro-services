@@ -1,0 +1,32 @@
+# Version Control
+.git
+.gitignore
+
+# Python Cache & Compiled Files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments (Poetry creates .venv)
+.venv
+venv/
+env/
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing & Coverage
+.pytest_cache
+.coverage
+htmlcov/
+
+# Local Configuration (Don't bake secrets into the image)
+.env
+
+# Docker
+Dockerfile
+docker-compose.yml

@@ -1,0 +1,15 @@
+api:
+  dashboard: true
+  insecure: true  # Enable the dashboard without auth (Dev only)
+
+entryPoints:
+  web:
+    address: ":80"
+
+providers:
+  consulCatalog:
+    endpoint:
+      address: "consul:8500"
+    exposedByDefault: false  # Only expose services with traefik.enable=true
+    prefix: "traefik"
+    connectAware: false      # We are using standard Consul, not Connect
